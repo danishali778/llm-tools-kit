@@ -93,6 +93,15 @@ PRs should include:
 - validation commands you ran
 - notable limitations or follow-up work
 
+Contributors should submit changes through pull requests rather than pushing directly to `main`.
+
+Repository maintainers decide:
+
+- whether a PR is ready
+- whether it should be merged
+- when it should be merged
+- which merge method should be used
+
 Draft PRs are fine during development. Mark them ready when the scope is complete and checks are passing.
 
 ## Merge Strategy
@@ -108,6 +117,8 @@ Why:
 - preserves atomic commits on `main`
 - keeps history linear
 - keeps PR commit structure visible after merge
+
+This merge strategy is a maintainer decision at merge time. Opening a PR does not imply it will be merged automatically.
 
 Do not use squash merge by default for this repository.
 

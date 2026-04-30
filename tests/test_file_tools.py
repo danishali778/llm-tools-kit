@@ -31,7 +31,7 @@ def test_list_files_safe_returns_relative_paths(tmp_path: Path) -> None:
 
     expected = {
         "a.txt",
-        "nested\\b.txt",
+        str(Path("nested") / "b.txt"),
     }
     assert set(files) == expected
 

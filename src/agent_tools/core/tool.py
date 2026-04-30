@@ -20,6 +20,9 @@ class Tool(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return self.func(*args, **kwargs)
+
     def run(self, **kwargs: Any) -> Any:
         validated = self.input_schema(**kwargs)
         return self.func(**validated.model_dump())
@@ -69,6 +72,11 @@ def _create_input_schema(func: Callable[..., Any], tool_name: str) -> type[BaseM
     fields: dict[str, tuple[Any, Any]] = {}
 
     for param_name, param in sig.parameters.items():
+        if param.kind is Parameter.POSITIONAL_ONLY:
+            raise ToolRegistrationError(
+                f"Tool '{tool_name}' cannot use positional-only parameters."
+            )
+
         if param.kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD):
             raise ToolRegistrationError(
                 f"Tool '{tool_name}' cannot use *args or **kwargs parameters."

@@ -15,6 +15,15 @@ def test_tool_decorator_creates_tool_from_function() -> None:
     assert add.run(a=2, b=3) == 5
 
 
+def test_decorated_tool_can_be_called_directly() -> None:
+    @tool
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    assert add(2, 3) == 5
+    assert add(a=2, b=3) == 5
+
+
 def test_tool_decorator_supports_custom_metadata() -> None:
     @tool(name="sum_numbers", description="Sum numbers.", tags=["math"])
     def add(a: int, b: int) -> int:
@@ -39,4 +48,12 @@ def test_tool_rejects_varargs() -> None:
         @tool
         def broken(*args: str) -> str:
             return ",".join(args)
+
+
+def test_tool_rejects_positional_only_parameters() -> None:
+    with pytest.raises(ToolRegistrationError):
+
+        @tool
+        def broken(value: str, /) -> str:
+            return value
 

@@ -6,7 +6,7 @@ This repository currently includes:
 
 - The core tool system
 - A Gemini adapter for function calling
-- The first built-in utility tools for JSON extraction/repair and text chunking
+- Built-in utility tools for JSON extraction/repair, text chunking, safe file access, and secret redaction
 
 ## Quickstart
 
@@ -31,12 +31,13 @@ print(result.output)
 
 ```python
 from agent_tools import ToolRegistry
-from agent_tools.tools import chunk_text, extract_json
+from agent_tools.tools import chunk_text, extract_json, redact_secrets
 
-registry = ToolRegistry([extract_json, chunk_text])
+registry = ToolRegistry([extract_json, chunk_text, redact_secrets])
 
 payload = registry.run("extract_json", text='Result: {"ok": true}')
 chunks = registry.run("chunk_text", text="alpha beta gamma delta", max_chars=10)
+clean = registry.run("redact_secrets", text="sk-test_1234567890abcdefghijklmnop")
 ```
 
 ## Development

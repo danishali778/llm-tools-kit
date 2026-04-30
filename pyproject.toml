@@ -26,3 +26,5 @@ pythonpath = ["src"]
 line-length = 88
 target-version = "py311"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_tools"]

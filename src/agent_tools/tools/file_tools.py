@@ -2,18 +2,25 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from agent_tools.core.context import get_current_tool_context
 from agent_tools.core.errors import ToolExecutionError
 from agent_tools.core.tool import tool
+from agent_tools.safety.path_safety import (
+    ensure_within_allowed_directories,
+    resolve_base_dir,
+    resolve_within_base,
+)
 
 
-@tool
+@tool(risk_level="medium")
 def read_file_safe(path: str, base_dir: str = ".", max_chars: int = 1_000_000) -> str:
     """Read a text file within base_dir."""
     if max_chars < 1:
         raise ToolExecutionError("max_chars must be greater than 0.")
 
-    base_path = _resolve_base_dir(base_dir)
-    target_path = _resolve_within_base(base_path, path)
+    base_path = resolve_base_dir(base_dir)
+    target_path = resolve_within_base(base_path, path)
+    _enforce_context_paths(base_path, target_path)
 
     if not target_path.is_file():
         raise ToolExecutionError(f"File not found: {path}")
@@ -21,11 +28,12 @@ def read_file_safe(path: str, base_dir: str = ".", max_chars: int = 1_000_000) -
     content = _read_text_file(target_path)
     if len(content) > max_chars:
         raise ToolExecutionError(f"File exceeds max_chars limit of {max_chars}.")
+    _enforce_context_size_limit(content)
 
     return content
 
 
-@tool
+@tool(risk_level="medium")
 def list_files_safe(
     directory: str = ".",
     base_dir: str = ".",
@@ -37,8 +45,9 @@ def list_files_safe(
     if max_results < 1:
         raise ToolExecutionError("max_results must be greater than 0.")
 
-    base_path = _resolve_base_dir(base_dir)
-    target_dir = _resolve_within_base(base_path, directory)
+    base_path = resolve_base_dir(base_dir)
+    target_dir = resolve_within_base(base_path, directory)
+    _enforce_context_paths(base_path, target_dir)
 
     if not target_dir.is_dir():
         raise ToolExecutionError(f"Directory not found: {directory}")
@@ -52,7 +61,7 @@ def list_files_safe(
     return files[:max_results]
 
 
-@tool
+@tool(risk_level="medium")
 def search_files_safe(
     directory: str,
     query: str,
@@ -67,8 +76,9 @@ def search_files_safe(
     if max_results < 1:
         raise ToolExecutionError("max_results must be greater than 0.")
 
-    base_path = _resolve_base_dir(base_dir)
-    target_dir = _resolve_within_base(base_path, directory)
+    base_path = resolve_base_dir(base_dir)
+    target_dir = resolve_within_base(base_path, directory)
+    _enforce_context_paths(base_path, target_dir)
 
     if not target_dir.is_dir():
         raise ToolExecutionError(f"Directory not found: {directory}")
@@ -96,20 +106,29 @@ def search_files_safe(
     return matches
 
 
-def _resolve_base_dir(base_dir: str) -> Path:
-    path = Path(base_dir).resolve()
-    if not path.is_dir():
-        raise ToolExecutionError(f"Base directory not found: {base_dir}")
-    return path
+def _enforce_context_paths(*paths: Path) -> None:
+    context = get_current_tool_context()
+    if context is None:
+        return
+
+    allowed_directories = context.resolved_allowed_directories()
+    if not allowed_directories:
+        return
+
+    for path in paths:
+        ensure_within_allowed_directories(path, allowed_directories)
 
 
-def _resolve_within_base(base_path: Path, user_path: str) -> Path:
-    target = (base_path / user_path).resolve()
-    try:
-        target.relative_to(base_path)
-    except ValueError as exc:
-        raise ToolExecutionError("Path escapes the allowed base directory.") from exc
-    return target
+def _enforce_context_size_limit(content: str) -> None:
+    context = get_current_tool_context()
+    if context is None or context.max_file_size_bytes is None:
+        return
+
+    content_size = len(content.encode("utf-8"))
+    if content_size > context.max_file_size_bytes:
+        raise ToolExecutionError(
+            f"File exceeds max_file_size_bytes limit of {context.max_file_size_bytes}."
+        )
 
 
 def _read_text_file(path: Path) -> str:

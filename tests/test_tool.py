@@ -34,6 +34,15 @@ def test_tool_decorator_supports_custom_metadata() -> None:
     assert add.tags == ("math",)
 
 
+def test_tool_decorator_supports_risk_metadata() -> None:
+    @tool(risk_level="high", requires_approval=True)
+    def delete_record(record_id: str) -> str:
+        return record_id
+
+    assert delete_record.risk_level == "high"
+    assert delete_record.requires_approval is True
+
+
 def test_tool_uses_defaults() -> None:
     @tool
     def greet(name: str, punctuation: str = "!") -> str:
@@ -55,5 +64,13 @@ def test_tool_rejects_positional_only_parameters() -> None:
 
         @tool
         def broken(value: str, /) -> str:
+            return value
+
+
+def test_tool_rejects_unknown_risk_level() -> None:
+    with pytest.raises(ToolRegistrationError, match="Unsupported risk level"):
+
+        @tool(risk_level="critical")
+        def broken(value: str) -> str:
             return value
 

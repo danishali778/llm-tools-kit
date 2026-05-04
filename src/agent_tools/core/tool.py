@@ -6,6 +6,7 @@ from typing import Any, TypeVar, get_type_hints
 from pydantic import BaseModel, ConfigDict, create_model
 
 from agent_tools.core.errors import ToolRegistrationError
+from agent_tools.safety.risk import normalize_risk_level
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -17,6 +18,8 @@ class Tool(BaseModel):
     func: Callable[..., Any]
     tags: tuple[str, ...] = ()
     metadata: dict[str, Any] = {}
+    risk_level: str = "low"
+    requires_approval: bool = False
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -35,6 +38,8 @@ def tool(
     description: str | None = None,
     tags: list[str] | tuple[str, ...] | None = None,
     metadata: dict[str, Any] | None = None,
+    risk_level: str = "low",
+    requires_approval: bool = False,
 ) -> Tool | Callable[[F], Tool]:
     def decorator(inner_func: F) -> Tool:
         tool_name = name or inner_func.__name__
@@ -50,6 +55,8 @@ def tool(
             func=wrapped,
             tags=tuple(tags or ()),
             metadata=metadata or {},
+            risk_level=normalize_risk_level(risk_level),
+            requires_approval=requires_approval,
         )
 
     if func is not None:

@@ -1,5 +1,6 @@
 from agent_tools.core import (
     Tool,
+    ToolContext,
     ToolError,
     ToolExecutionError,
     ToolExecutor,
@@ -13,6 +14,7 @@ from agent_tools.core import (
 
 __all__ = [
     "Tool",
+    "ToolContext",
     "ToolError",
     "ToolExecutionError",
     "ToolExecutor",

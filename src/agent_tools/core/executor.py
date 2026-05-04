@@ -2,8 +2,10 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
+from agent_tools.core.context import ToolContext, use_tool_context
 from agent_tools.core.errors import ToolError, ToolNotFoundError
 from agent_tools.core.result import ToolResult
+from agent_tools.safety.permissions import enforce_tool_permissions
 
 if TYPE_CHECKING:
     from agent_tools.core.registry import ToolRegistry
@@ -13,7 +15,7 @@ class ToolExecutor:
     def __init__(self, registry: "ToolRegistry") -> None:
         self.registry = registry
 
-    def run(self, name: str, **kwargs: Any) -> ToolResult:
+    def run(self, name: str, context: ToolContext | None = None, **kwargs: Any) -> ToolResult:
         try:
             tool = self.registry.get(name)
         except ToolNotFoundError as exc:
@@ -24,7 +26,9 @@ class ToolExecutor:
             )
 
         try:
-            output = tool.run(**kwargs)
+            enforce_tool_permissions(tool, context)
+            with use_tool_context(context):
+                output = tool.run(**kwargs)
         except ValidationError as exc:
             return ToolResult.failure(
                 tool_name=name,

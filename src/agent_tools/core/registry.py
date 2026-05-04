@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from agent_tools.core.context import ToolContext
 from agent_tools.core.errors import ToolNotFoundError, ToolRegistrationError
 from agent_tools.core.executor import ToolExecutor
 from agent_tools.core.result import ToolResult
@@ -39,8 +40,8 @@ class ToolRegistry:
     def tools(self) -> list[Tool]:
         return self.list()
 
-    def run(self, name: str, **kwargs: object) -> ToolResult:
-        return self._executor.run(name, **kwargs)
+    def run(self, name: str, *, context: ToolContext | None = None, **kwargs: object) -> ToolResult:
+        return self._executor.run(name, context=context, **kwargs)
 
     def __contains__(self, name: str) -> bool:
         return name in self._tools

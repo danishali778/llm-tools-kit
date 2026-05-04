@@ -1,3 +1,4 @@
+from agent_tools.core.context import ToolContext
 from agent_tools.core.errors import (
     ToolError,
     ToolExecutionError,
@@ -12,6 +13,7 @@ from agent_tools.core.tool import Tool, tool
 
 __all__ = [
     "Tool",
+    "ToolContext",
     "ToolError",
     "ToolExecutionError",
     "ToolExecutor",

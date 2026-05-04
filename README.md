@@ -16,6 +16,17 @@ It currently gives you:
 
 The package is intentionally small and explicit. The core stays provider-neutral, adapters stay separate, and tests avoid hidden network calls.
 
+## Documentation
+
+Project documentation lives under [`docs/`](docs/):
+
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/creating_tools.md`](docs/creating_tools.md)
+- [`docs/gemini_adapter.md`](docs/gemini_adapter.md)
+- [`docs/safety.md`](docs/safety.md)
+- [`docs/tool_reference.md`](docs/tool_reference.md)
+- [`docs/packaging.md`](docs/packaging.md)
+
 ## Why This Exists
 
 Most agent projects start with a few helper functions and quickly turn into a pile of ad hoc wrappers, string parsing, and runtime surprises. This project is aimed at the opposite direction:
@@ -37,7 +48,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | File utilities | Implemented | `read_file_safe`, `list_files_safe`, `search_files_safe` |
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
 | Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
-| Advanced safety layer | Partial | File tools are base-dir bounded; broader execution context is still future work |
+| Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
 
 ## Installation
 
@@ -293,6 +304,8 @@ See also:
 - [basic_tool.py](examples/basic_tool.py)
 - [gemini_schema.py](examples/gemini_schema.py)
 - [utility_tools.py](examples/utility_tools.py)
+- [docs/creating_tools.md](docs/creating_tools.md)
+- [docs/tool_reference.md](docs/tool_reference.md)
 
 ## Environment Variables
 
@@ -404,4 +417,4 @@ Likely next areas:
 
 ## License
 
-No `LICENSE` file is included yet.
+This project is licensed under the [MIT License](LICENSE).

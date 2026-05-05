@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from agent_tools import ToolContext, ToolRegistry
 from agent_tools.tools import get_memory, save_memory, search_memory
 
 
@@ -55,3 +56,23 @@ def test_search_memory_returns_matching_notes(tmp_path: Path):
 
     assert len(results) == 1
     assert results[0]["text"] == "draft release notes"
+
+
+def test_save_memory_respects_allowed_directories(tmp_path: Path):
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+
+    registry = ToolRegistry([save_memory])
+    context = ToolContext(allowed_directories=(str(allowed),))
+
+    result = registry.run(
+        "save_memory",
+        context=context,
+        text="blocked write",
+        memory_path="memory.json",
+        base_dir=str(blocked),
+    )
+
+    assert result.ok is False

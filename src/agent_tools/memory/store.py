@@ -4,14 +4,32 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
+from agent_tools.core.context import get_current_tool_context
 from agent_tools.memory.models import MemoryNote
-from agent_tools.safety.path_safety import resolve_base_dir, resolve_within_base
+from agent_tools.safety.path_safety import (
+    ensure_within_allowed_directories,
+    resolve_base_dir,
+    resolve_within_base,
+)
 
 
 class JsonMemoryStore:
     def __init__(self, memory_path: str = "memory.json", base_dir: str | Path = "."):
         self._base_dir = resolve_base_dir(str(base_dir))
         self._path = resolve_within_base(self._base_dir, memory_path)
+        self._enforce_context_paths()
+
+    def _enforce_context_paths(self) -> None:
+        context = get_current_tool_context()
+        if context is None:
+            return
+
+        allowed_directories = context.resolved_allowed_directories()
+        if not allowed_directories:
+            return
+
+        ensure_within_allowed_directories(self._base_dir, allowed_directories)
+        ensure_within_allowed_directories(self._path, allowed_directories)
 
     def _load_notes(self) -> list[MemoryNote]:
         if not self._path.exists():

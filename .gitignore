@@ -12,6 +12,7 @@ htmlcov/
 !.env.example
 
 PHASES.md
+docs/superpowers/
 
 .venv/
 venv/

@@ -351,7 +351,7 @@ Current package organization:
 
 ```mermaid
 flowchart TD
-    F[Python function] --> D[@tool decorator]
+    F["Python function"] --> D["tool decorator (@tool)"]
     D --> T[Tool]
     T --> R[ToolRegistry]
     R --> E[ToolExecutor]

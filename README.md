@@ -12,7 +12,7 @@ It currently gives you:
 
 - A typed tool system built around `@tool`, `Tool`, `ToolRegistry`, `ToolExecutor`, and `ToolResult`
 - A Gemini adapter that turns registered tools into Gemini `functionDeclarations`
-- Built-in utility tools for JSON extraction and repair, text chunking, safe local file access, and secret redaction
+- Built-in utility tools for JSON extraction and repair, text chunking, safe local file access, local note memory, and secret redaction
 
 The package is intentionally small and explicit. The core stays provider-neutral, adapters stay separate, and tests avoid hidden network calls.
 
@@ -46,6 +46,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | JSON utilities | Implemented | `extract_json`, `repair_json` |
 | Text utilities | Implemented | `chunk_text` |
 | File utilities | Implemented | `read_file_safe`, `list_files_safe`, `search_files_safe` |
+| Memory utilities | Implemented | `save_memory`, `get_memory`, `search_memory` |
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
 | Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
 | Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
@@ -303,6 +304,7 @@ See also:
 
 - [basic_tool.py](examples/basic_tool.py)
 - [gemini_schema.py](examples/gemini_schema.py)
+- [memory_tools.py](examples/memory_tools.py)
 - [utility_tools.py](examples/utility_tools.py)
 - [docs/creating_tools.md](docs/creating_tools.md)
 - [docs/tool_reference.md](docs/tool_reference.md)
@@ -384,6 +386,7 @@ Run examples:
 ```bash
 python examples/basic_tool.py
 python examples/gemini_schema.py
+python examples/memory_tools.py
 python examples/utility_tools.py
 ```
 

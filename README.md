@@ -12,7 +12,7 @@ It currently gives you:
 
 - A typed tool system built around `@tool`, `Tool`, `ToolRegistry`, `ToolExecutor`, and `ToolResult`
 - A Gemini adapter that turns registered tools into Gemini `functionDeclarations`
-- Built-in utility tools for JSON extraction and repair, text chunking, safe local file access, local note memory, and secret redaction
+- Built-in utility tools for JSON extraction and repair, text chunking, safe local file access, local note memory, public web content fetching, and secret redaction
 
 The package is intentionally small and explicit. The core stays provider-neutral, adapters stay separate, and tests avoid hidden network calls.
 
@@ -47,6 +47,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | Text utilities | Implemented | `chunk_text` |
 | File utilities | Implemented | `read_file_safe`, `list_files_safe`, `search_files_safe` |
 | Memory utilities | Implemented | `save_memory`, `get_memory`, `search_memory` |
+| Web utilities | Implemented | `fetch_url_text`, `clean_html`, `extract_links` |
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
 | Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
 | Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
@@ -254,6 +255,23 @@ Important limitations:
 - Paths are resolved relative to a bounded `base_dir`
 - This is not a shell tool or a generic filesystem abstraction
 
+### Web tools
+
+Module: `agent_tools.tools.web_tools`
+
+| Tool | Purpose | Notes |
+| --- | --- | --- |
+| `fetch_url_text(url, timeout_seconds=10.0, max_bytes=1_000_000)` | Fetch a public webpage and return readable text | Allows only HTTP/HTTPS and enforces timeout and size limits |
+| `clean_html(html)` | Convert raw HTML into readable text | Removes `script`, `style`, and `noscript` content |
+| `extract_links(url, timeout_seconds=10.0, max_bytes=1_000_000)` | Fetch a public webpage and return unique absolute links | Skips empty and fragment-only links |
+
+Important limitations:
+
+- No browser automation or JavaScript rendering
+- No login/session support
+- No anti-bot bypass behavior
+- Some sites may block ordinary HTTP client access
+
 ### Secret redaction
 
 Module: `agent_tools.safety.redaction`
@@ -305,6 +323,7 @@ See also:
 - [basic_tool.py](examples/basic_tool.py)
 - [gemini_schema.py](examples/gemini_schema.py)
 - [memory_tools.py](examples/memory_tools.py)
+- [webpage_summary_agent.py](examples/webpage_summary_agent.py)
 - [utility_tools.py](examples/utility_tools.py)
 - [docs/creating_tools.md](docs/creating_tools.md)
 - [docs/tool_reference.md](docs/tool_reference.md)
@@ -387,6 +406,7 @@ Run examples:
 python examples/basic_tool.py
 python examples/gemini_schema.py
 python examples/memory_tools.py
+python examples/webpage_summary_agent.py
 python examples/utility_tools.py
 ```
 

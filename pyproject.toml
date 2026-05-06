@@ -30,6 +30,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    "beautifulsoup4>=4.12,<5.0",
+    "httpx>=0.27,<1.0",
     "pydantic>=2.0,<3.0",
 ]
 

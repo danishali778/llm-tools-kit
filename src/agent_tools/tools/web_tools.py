@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 import httpx
@@ -59,3 +59,33 @@ def _validate_url(url: str) -> None:
         raise ToolExecutionError("Only http and https URLs are allowed.")
     if not parsed.netloc:
         raise ToolExecutionError("URL must include a network location.")
+
+
+@tool(risk_level="medium")
+def extract_links(
+    url: str,
+    timeout_seconds: float = 10.0,
+    max_bytes: int = 1_000_000,
+) -> list[str]:
+    """Fetch a public webpage and extract unique links."""
+    html = _fetch_url_html(url, timeout_seconds=timeout_seconds, max_bytes=max_bytes)
+    soup = BeautifulSoup(html, "html.parser")
+
+    links: list[str] = []
+    seen: set[str] = set()
+
+    for anchor in soup.find_all("a", href=True):
+        href = anchor.get("href", "").strip()
+        if not href or href.startswith("#"):
+            continue
+
+        absolute = urljoin(url, href)
+        parsed = urlparse(absolute)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            continue
+
+        if absolute not in seen:
+            seen.add(absolute)
+            links.append(absolute)
+
+    return links

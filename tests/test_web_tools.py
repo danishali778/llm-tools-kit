@@ -2,6 +2,7 @@ import pytest
 
 from agent_tools.core.errors import ToolExecutionError
 from agent_tools.tools.web_tools import clean_html
+from agent_tools.tools.web_tools import extract_links
 from agent_tools.tools.web_tools import fetch_url_text
 
 
@@ -66,3 +67,32 @@ def test_fetch_url_text_rejects_oversized_response(monkeypatch):
 
     with pytest.raises(ToolExecutionError):
         fetch_url_text("https://example.com", max_bytes=10)
+
+
+def test_extract_links_returns_absolute_unique_links(monkeypatch):
+    class DummyResponse:
+        status_code = 200
+        text = """
+        <html><body>
+          <a href="/docs">Docs</a>
+          <a href="https://example.com/about">About</a>
+          <a href="/docs">Docs again</a>
+          <a href="#fragment">Fragment</a>
+        </body></html>
+        """
+        content = text.encode("utf-8")
+
+        def raise_for_status(self):
+            return None
+
+    def fake_get(self, url):
+        return DummyResponse()
+
+    monkeypatch.setattr("httpx.Client.get", fake_get)
+
+    result = extract_links("https://example.com/start")
+
+    assert result == [
+        "https://example.com/docs",
+        "https://example.com/about",
+    ]

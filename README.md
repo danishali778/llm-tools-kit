@@ -26,6 +26,7 @@ Project documentation lives under [`docs/`](docs/):
 - [`docs/safety.md`](docs/safety.md)
 - [`docs/tool_reference.md`](docs/tool_reference.md)
 - [`docs/packaging.md`](docs/packaging.md)
+- [`docs/mcp_export.md`](docs/mcp_export.md)
 
 ## Why This Exists
 
@@ -49,6 +50,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | Memory utilities | Implemented | `save_memory`, `get_memory`, `search_memory` |
 | Web utilities | Implemented | `fetch_url_text`, `clean_html`, `extract_links` |
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
+| MCP export | Implemented | Optional stdio server export from `ToolRegistry` |
 | Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
 | Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
 
@@ -71,6 +73,10 @@ Development dependencies:
 
 - `pytest`
 - `ruff`
+
+Optional extras:
+
+- `mcp` for MCP server export
 
 ## Quickstart
 
@@ -393,6 +399,12 @@ Install development dependencies:
 python -m pip install -e ".[dev]"
 ```
 
+Install MCP support:
+
+```bash
+python -m pip install -e ".[mcp,dev]"
+```
+
 Run checks:
 
 ```bash
@@ -406,6 +418,7 @@ Run examples:
 python examples/basic_tool.py
 python examples/gemini_schema.py
 python examples/memory_tools.py
+python examples/mcp_stdio_server.py
 python examples/webpage_summary_agent.py
 python examples/utility_tools.py
 ```

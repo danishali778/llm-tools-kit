@@ -35,5 +35,5 @@ This slice does not add:
 
 - HTTP transport
 - auth or session management
-- LangChain integration
+- LangChain integration helpers beyond the separate `docs/langchain_adapter.md` slice
 - external-service requirements in normal tests

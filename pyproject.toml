@@ -49,6 +49,9 @@ dev = [
 mcp = [
     "mcp>=1.27,<2.0",
 ]
+langchain = [
+    "langchain-core>=1.2,<2.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

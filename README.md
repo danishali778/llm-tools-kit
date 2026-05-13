@@ -23,6 +23,7 @@ Project documentation lives under [`docs/`](docs/):
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/creating_tools.md`](docs/creating_tools.md)
 - [`docs/gemini_adapter.md`](docs/gemini_adapter.md)
+- [`docs/langchain_adapter.md`](docs/langchain_adapter.md)
 - [`docs/safety.md`](docs/safety.md)
 - [`docs/tool_reference.md`](docs/tool_reference.md)
 - [`docs/packaging.md`](docs/packaging.md)
@@ -51,6 +52,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | Web utilities | Implemented | `fetch_url_text`, `clean_html`, `extract_links` |
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
 | MCP export | Implemented | Optional stdio server export from `ToolRegistry` |
+| LangChain adapter | Implemented | Optional export of local tools to LangChain `StructuredTool` objects |
 | Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
 | Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
 
@@ -77,6 +79,7 @@ Development dependencies:
 Optional extras:
 
 - `mcp` for MCP server export
+- `langchain` for LangChain `StructuredTool` export
 
 ## Quickstart
 
@@ -405,6 +408,12 @@ Install MCP support:
 python -m pip install -e ".[mcp,dev]"
 ```
 
+Install LangChain support:
+
+```bash
+python -m pip install -e ".[langchain,dev]"
+```
+
 Run checks:
 
 ```bash
@@ -417,6 +426,7 @@ Run examples:
 ```bash
 python examples/basic_tool.py
 python examples/gemini_schema.py
+python examples/langchain_tools.py
 python examples/memory_tools.py
 python examples/mcp_stdio_server.py
 python examples/webpage_summary_agent.py

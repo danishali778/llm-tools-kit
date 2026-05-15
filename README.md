@@ -12,6 +12,7 @@ It currently gives you:
 
 - A typed tool system built around `@tool`, `Tool`, `ToolRegistry`, `ToolExecutor`, and `ToolResult`
 - A Gemini adapter that turns registered tools into Gemini `functionDeclarations`
+- An OpenAI adapter that turns registered tools into Responses API function tools
 - Built-in utility tools for JSON extraction and repair, text chunking, safe local file access, local note memory, public web content fetching, and secret redaction
 
 The package is intentionally small and explicit. The core stays provider-neutral, adapters stay separate, and tests avoid hidden network calls.
@@ -23,6 +24,7 @@ Project documentation lives under [`docs/`](docs/):
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/creating_tools.md`](docs/creating_tools.md)
 - [`docs/gemini_adapter.md`](docs/gemini_adapter.md)
+- [`docs/openai_adapter.md`](docs/openai_adapter.md)
 - [`docs/langchain_adapter.md`](docs/langchain_adapter.md)
 - [`docs/safety.md`](docs/safety.md)
 - [`docs/tool_reference.md`](docs/tool_reference.md)
@@ -45,6 +47,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | --- | --- | --- |
 | Core tool system | Implemented | `@tool`, registry, executor, structured results, custom errors |
 | Gemini adapter | Implemented | Schema export plus Gemini-style tool call execution helper |
+| OpenAI adapter | Implemented | Responses API schema export plus function-call execution helper |
 | JSON utilities | Implemented | `extract_json`, `repair_json` |
 | Text utilities | Implemented | `chunk_text` |
 | File utilities | Implemented | `read_file_safe`, `list_files_safe`, `search_files_safe` |
@@ -53,7 +56,7 @@ Most agent projects start with a few helper functions and quickly turn into a pi
 | Secret redaction | Implemented | `detect_secrets`, `redact_secrets` |
 | MCP export | Implemented | Optional stdio server export from `ToolRegistry` |
 | LangChain adapter | Implemented | Optional export of local tools to LangChain `StructuredTool` objects |
-| Live provider SDK integration | Not yet included | No Gemini SDK dependency in the package today |
+| Live provider SDK integration | Not yet included | No Gemini or OpenAI SDK dependency in the package today |
 | Safety layer foundation | Implemented | `ToolContext`, risk metadata, approval enforcement, path-bounded file access |
 
 ## Installation
@@ -211,6 +214,70 @@ What it does not do yet:
 - Manage chats, sessions, retries, or streaming
 - Add the Gemini Python SDK as a package dependency
 
+## OpenAI Adapter
+
+The OpenAI adapter targets Responses API function tools without requiring the
+OpenAI SDK.
+
+Available helpers:
+
+- `to_openai_tool(tool)`
+- `to_openai_tools(tools)`
+- `execute_openai_tool_call(tool_call, registry)`
+
+Example:
+
+```python
+from agent_tools import ToolRegistry, tool
+from agent_tools.adapters import execute_openai_tool_call, to_openai_tools
+
+
+@tool
+def add(a: int, b: int) -> int:
+    """Add two numbers."""
+    return a + b
+
+
+registry = ToolRegistry([add])
+tools = to_openai_tools(registry.tools)
+
+tool_call = {"name": "add", "arguments": "{\"a\": 2, \"b\": 3}"}
+result = execute_openai_tool_call(tool_call, registry)
+```
+
+Generated OpenAI tool shape:
+
+```python
+[
+    {
+        "type": "function",
+        "name": "add",
+        "description": "Add two numbers.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "a": {"type": "integer"},
+                "b": {"type": "integer"},
+            },
+            "required": ["a", "b"],
+        },
+    }
+]
+```
+
+What this adapter does today:
+
+- Converts tool schemas into OpenAI Responses API function tool definitions
+- Accepts function calls as mappings or objects with `name` and `arguments`
+- Parses JSON string arguments and routes execution through `ToolRegistry`
+
+What it does not do yet:
+
+- Call the OpenAI API directly
+- Manage chats, sessions, retries, or streaming
+- Add the OpenAI Python SDK as a package dependency
+- Target Chat Completions tool-call payloads
+
 ## Built-In Tools
 
 ### JSON tools
@@ -331,6 +398,7 @@ See also:
 
 - [basic_tool.py](examples/basic_tool.py)
 - [gemini_schema.py](examples/gemini_schema.py)
+- [openai_schema.py](examples/openai_schema.py)
 - [memory_tools.py](examples/memory_tools.py)
 - [webpage_summary_agent.py](examples/webpage_summary_agent.py)
 - [utility_tools.py](examples/utility_tools.py)
@@ -344,14 +412,16 @@ The repository includes [.env.example](.env.example):
 ```env
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.0-flash
+OPENAI_API_KEY=
 ```
 
 These are optional today.
 
 - `GEMINI_API_KEY` is intended for future live Gemini examples
 - `GEMINI_MODEL` is a convenience default for those examples
+- `OPENAI_API_KEY` is intended for future live OpenAI examples
 
-The current package and tests do not require either variable.
+The current package and tests do not require these variables.
 
 ## Project Layout
 
@@ -385,6 +455,7 @@ flowchart TD
     R --> E[ToolExecutor]
     E --> O[ToolResult]
     R --> G[Gemini adapter]
+    R --> OAI[OpenAI adapter]
     R --> U[Built-in utility tools]
 ```
 
@@ -426,6 +497,7 @@ Run examples:
 ```bash
 python examples/basic_tool.py
 python examples/gemini_schema.py
+python examples/openai_schema.py
 python examples/langchain_tools.py
 python examples/memory_tools.py
 python examples/mcp_stdio_server.py
@@ -456,7 +528,7 @@ Likely next areas:
 ## Current Limitations
 
 - No packaged live Gemini client integration yet
-- No OpenAI adapter on `main` yet
+- No packaged live OpenAI client integration yet
 - File tools are intentionally conservative and UTF-8 only
 - Secret detection is heuristic, not exhaustive
 - The larger safety layer described in planning is not fully implemented yet

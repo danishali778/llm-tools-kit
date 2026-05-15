@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -13,12 +14,19 @@ from agent_tools.integrations import (
 )
 from agent_tools.tools import save_memory
 
+langchain_available = find_spec("langchain_core") is not None
+requires_langchain = pytest.mark.skipif(
+    not langchain_available,
+    reason="langchain-core optional dependency is not installed",
+)
+
 
 @tool(description="Add two integers.", tags=("math",), metadata={"unit": "count"})
 def add(a: int, b: int) -> int:
     return a + b
 
 
+@requires_langchain
 def test_to_langchain_tool_exports_schema_and_metadata():
     exported = to_langchain_tool(add)
 
@@ -29,6 +37,7 @@ def test_to_langchain_tool_exports_schema_and_metadata():
     assert exported.args_schema is add.input_schema
 
 
+@requires_langchain
 def test_to_langchain_tools_preserves_order():
     @tool
     def greet(name: str) -> str:
@@ -39,12 +48,14 @@ def test_to_langchain_tools_preserves_order():
     assert [tool_item.name for tool_item in exported] == ["add", "greet"]
 
 
+@requires_langchain
 def test_langchain_tool_invocation_returns_successful_output():
     exported = to_langchain_tool(add)
 
     assert exported.invoke({"a": 2, "b": 3}) == 5
 
 
+@requires_langchain
 def test_langchain_tool_routes_through_registry_run(monkeypatch: pytest.MonkeyPatch):
     registry = ToolRegistry([add])
     exported = registry_to_langchain_tools(registry)[0]
@@ -53,7 +64,11 @@ def test_langchain_tool_routes_through_registry_run(monkeypatch: pytest.MonkeyPa
 
     def fake_run(name: str, *, context: ToolContext | None = None, **kwargs: object):
         calls.append((name, kwargs))
-        return type("Result", (), {"ok": True, "output": 99, "error": None, "error_type": None})()
+        return type(
+            "Result",
+            (),
+            {"ok": True, "output": 99, "error": None, "error_type": None},
+        )()
 
     monkeypatch.setattr(registry, "run", fake_run)
 
@@ -61,6 +76,7 @@ def test_langchain_tool_routes_through_registry_run(monkeypatch: pytest.MonkeyPa
     assert calls == [("add", {"a": 2, "b": 3})]
 
 
+@requires_langchain
 def test_langchain_tool_surfaces_validation_failure_cleanly():
     exported = to_langchain_tool(add)
 
@@ -72,6 +88,7 @@ def test_langchain_tool_surfaces_validation_failure_cleanly():
     assert "AddInput" in message
 
 
+@requires_langchain
 def test_langchain_tool_surfaces_missing_tool_cleanly():
     registry = ToolRegistry([add])
     exported = registry_to_langchain_tools(registry)[0]
@@ -83,6 +100,7 @@ def test_langchain_tool_surfaces_missing_tool_cleanly():
     assert "ToolNotFoundError" in str(exc_info.value)
 
 
+@requires_langchain
 def test_langchain_tool_can_apply_context_factory(tmp_path: Path):
     allowed = tmp_path / "allowed"
     allowed.mkdir()
@@ -102,7 +120,10 @@ def test_langchain_tool_can_apply_context_factory(tmp_path: Path):
         seen_metadata.append(metadata)
         return ToolContext(allowed_directories=(str(allowed),))
 
-    exported = registry_to_langchain_tools(registry, context_factory=context_factory)[0]
+    exported = registry_to_langchain_tools(
+        registry,
+        context_factory=context_factory,
+    )[0]
 
     with pytest.raises(Exception) as exc_info:
         exported.invoke(
